@@ -34,7 +34,21 @@ def mi_funcion_sen(vmax, dc, ff, ph, nn, fs):
     
     return tt, xx
 
+
+def mi_funcion_sen_ruido(vmax, dc, ff, ph, nn, fs, snr, pr):
+    ts = 1/fs
+    tt = np.arange(0, nn) * ts
+    desvio = np.sqrt(pr)
+    r = np.random.normal(0, desvio, len(tt)) # lo del medio es el desvio estandar
+    #verifico el valor de la varianza de r a ver si calcule bien
+    print(f"Potencia de ruido (pr): {pr}") # esto es la potencia de ruido
+    xx = dc + vmax * np.sin(2 * np.pi * ff * tt + ph)
+    xx1 = xx + r
+    return tt, xx1
+
+
 # --- Parámetros para ver 1 Hz ---
+A = 1
 fs = 100        # Muestreamos 100 veces por segundo (suficiente para 1 Hz)
 N = 100         # Tomamos 100 muestras (así tenemos exactamente 1 segundo)
 vmax = 1        # 1 Volt de amplitud
@@ -42,12 +56,18 @@ dc = 0          # Sin offset
 f1 = 1          # frecuencia de la senal 1 Hz
 fase = 0        # 0 radianes
 
+snr = 20 #db
+Ps = (A**2)/ 2
+pr = Ps / (10**(snr/10)) #ESTO DEBERIA SER LA VARIANZA
+
 # Definimos la funcion de 1Hz
 tt, xx = mi_funcion_sen(vmax=vmax, dc=dc, ff=f1, ph=fase, nn=N, fs=fs)
+tt1, xx1 = mi_funcion_sen_ruido(A, dc, f1, fase, N, fs, snr, pr)
 
 # Graficamos f1 = 1 Hz
 plt.figure(figsize=(10, 4))
 plt.plot(tt, xx, 'b-o', markersize=3, label=f'Senoidal {f1} Hz')
+plt.plot(tt1, xx1, label="Con Ruido", alpha=0.7)
 plt.title(f"Señal Senoidal de {f1} Hz (1 ciclo completo)")
 plt.xlabel("Tiempo [s]")
 plt.ylabel("Amplitud [V]")
