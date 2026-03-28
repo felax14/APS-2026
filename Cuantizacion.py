@@ -13,18 +13,28 @@ def mi_funcion_sen_ruido(vmax, dc, ff, ph, nn, fs, pr):
     xx_con_ruido = xx + r
     return tt, xx_con_ruido
 
+def mi_funcion_sen(vmax, dc, ff, ph, nn, fs):
+    ts = 1/fs
+    tt = np.arange(nn) * ts
+    
+    xx = vmax * np.sin(2 * np.pi * ff * tt + ph) + dc
+    
+    return tt, xx
+
+
 # --- 1. Configuración de parámetros ---
 fs = 1000
 N = 1000                    # Aumenté N a 1000 para que dure 1 segundo como tu linspace
 B = 3                       # Bits de cuantización
 Vfs = 3                     # Voltaje Fondo de Escala
+vmax = 1 
 q = Vfs / (2**B)            # Paso de cuantización (LSB)
 
 A = 1.4                     # Amplitud
 dc = 0
 f1 = 2                      # 2 Hz para que se vea mejor en 1 segundo
 fase = 0
-snr = 10                # dB
+snr = 15               # dB
 
 Ps = (A**2)/ 2              # Potencia de la señal
 pr = Ps / (10**(snr/10))    # Potencia de ruido (Varianza)
@@ -76,3 +86,52 @@ ax_corr.grid(True, alpha=0.2)
 
 plt.tight_layout()
 plt.show()
+
+
+# 1. Cálculo de la FFT (Transformada Rápida de Fourier, un algoritmo para la DFT)
+# Usamos la señal con ruido 'xx' que definimos antes
+XX = np.fft.fft(xx)
+N = len(xx) # Debería ser 1000
+
+# 2. Extracción de Módulo y Fase
+Modulo = np.abs(XX) # Calculamos la magnitud (el valor absoluto)
+Fase = np.angle(XX) # Calculamos el ángulo de fase (en radianes)
+
+# 3. Graficación Estilo Figure 3
+fig_dft, (ax_mod, ax_fase) = plt.subplots(1, 2, figsize=(15, 6))
+fig_dft.suptitle('DFT de xx', fontsize=14)
+
+# PANEL IZQUIERDO: Módulo
+# Graficamos con el color lila/púrpura de la captura
+ax_mod.plot(Modulo, color='#9370DB', linewidth=1, label='Modulo')
+# Mostramos todo el rango de -1000 a 1000
+ax_mod.set_xlim(0, N) 
+ax_mod.set_title("DFT (Módulo)")
+ax_mod.set_xlabel("Muestra de frecuencia (bins)")
+ax_mod.grid(True, alpha=0.2)
+ax_mod.legend()
+
+# PANEL DERECHO: Fase
+# Graficamos con el mismo color
+ax_fase.plot(Fase, color='#9370DB', linewidth=1, label='Fase')
+# Rango completo
+ax_fase.set_xlim(0, N) 
+ax_fase.set_ylim(-np.pi, np.pi) # Rango teórico de fase: -pi a +pi
+ax_fase.set_title("DFT (Fase)")
+ax_fase.set_xlabel("Muestra de frecuencia (bins)")
+ax_fase.set_ylabel("Fase (radianes)")
+ax_fase.grid(True, alpha=0.2)
+ax_fase.legend(loc='lower right', fontsize='small')
+
+plt.tight_layout()
+plt.show()
+
+# --- Extra: Interpretación del Pico de Módulo ---
+pico_maximo = np.max(Modulo)
+muestra_frec = np.argmax(Modulo)
+print("-" * 50)
+print(f"ANÁLISIS DE LA DFT:")
+print(f"Amplitud máxima en el módulo: {pico_maximo:.1f}")
+print(f"Muestra de frecuencia (bin) del pico: {muestra_frec}")
+print("-" * 50)
+
