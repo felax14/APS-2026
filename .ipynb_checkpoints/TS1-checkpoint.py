@@ -100,48 +100,43 @@ plt.grid(True)
 plt.legend()
 plt.show()
 
+
 #%%
 # 3.Misma señal modulada en amplitud por otra señal sinusoidal de la mitad de la frecuencia.
 #  Generamos la moduladora (información) - f1/2 = 1000 Hz
 
+Am = 2 # Amplitud de la información
+ka = 1.0 
 
 
-# 1. Definimos las bases de tiempo para TODO el bloque
-fs_nueva = 20e6          # 20 MHz para que la portadora de 1MHz se vea perfecta
-N_nuevo = 60000          # 60.000 muestras para cubrir 3ms (3 ciclos de la info)
-tt_nuevo = np.arange(N_nuevo) / fs_nueva
+# Generar moduladora (1 kHz)
+_, A_n = mi_funcion_sen(vmax=2, dc=2, ff=1000, ph=0, nn=60000, fs=20e6)
 
-Am = 2 # Amplitud de la información (el valor pico)
-ka = 1.0 # Índice de modulación al 100% (m=1)
+# Generar portadora (1 MHz = 1.000.000 Hz)
+_, portadora = mi_funcion_sen(vmax=1, dc=0, ff=1e6, ph=0, nn=60000, fs=20e6)
 
-
-# 2. Generamos la MODULADORA (1 kHz) 
-_, A_n = mi_funcion_sen(vmax=Am, dc=Am, ff=2000, ph=0, nn=N_nuevo, fs=fs_nueva)
-
-# 3. Generamos la PORTADORA (1 MHz)
-_, portadora = mi_funcion_sen(vmax=1, dc=0, ff=1e6, ph=0, nn=N_nuevo, fs=fs_nueva)
-
-# 4. Modulación
 modulacion_am = A_n * portadora
 
-# 5. Cálculos con las variables locales
-print(f"Punto 3: Ts = {1/fs_nueva:.2e}s, N = {len(modulacion_am)}, Potencia = {np.mean(modulacion_am**2):.4f}W")
+# Cálculos y Print
+potencia = np.mean(modulacion_am**2)
+print(f"Punto 3: Ts = {1/fs:.2e}s, N = {len(modulacion_am)}, Potencia = {potencia:.4f}W")
 
-# 6. Gráfico con zoom correcto
-plt.figure(figsize=(12, 6))
-# Usamos linewidth muy fino (0.2 o 0.3) para que se aprecie la densidad de la portadora
-plt.plot(tt_nuevo, modulacion_am, 'b', linewidth=0.3, label='Señal AM (1 MHz)')
-plt.plot(tt_nuevo, A_n, 'r--', linewidth=2, label='Envolvente A(n)')
-plt.plot(tt_nuevo, -A_n, 'r--', linewidth=2, alpha=0.5)
+# Gráfico
+plt.figure(figsize=(10, 5))
+# Graficamos la señal AM
+plt.plot(tt, modulacion_am, 'b', linewidth=0.5, label='Señal AM (Portadora 1MHz)')
+# Graficamos la envolvente para verificar
+plt.plot(tt, A_n, 'r--', linewidth=2, label='Envolvente A(n)')
+plt.plot(tt, -A_n, 'r--', linewidth=2, alpha=0.5)
 
-plt.title('Modulación AM')
+plt.title('Modulación AM: $f_c = 1MHz$ vs $f_m = 1kHz$')
 plt.xlabel("Tiempo [s]")
 plt.ylabel("Amplitud [V]")
-plt.xlim(0, 0.003)  # Ver 3ms de señal
+# Zoom para ver los ciclos de la moduladora (1ms por ciclo)
+plt.xlim(0, 0.003) 
 plt.grid(True)
 plt.legend(loc='upper right')
 plt.show()
-
 
 #%%
 # 4.Señal anterior recortada al 75% de su amplitud.
@@ -205,104 +200,5 @@ plt.legend()
 plt.show()
 #%%
 
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy import signal
 
-# 1. Definición del sistema h[n]
-# h[n] = delta[n] - delta[n-4]
-# Representamos h[n] como un array. Los índices van de 0 a 4.
-# h[0]=1, h[1]=0, h[2]=0, h[3]=0, h[4]=-1
-h = np.array([1, 0, 0, 0, -1])
 
-# 2. Base de tiempo (índices discretos)
-N = 50  # Número de muestras para las señales de entrada
-n = np.arange(N)
-
-# ==============================================================================
-# a) x[n] = cos(w0 * n). Usemos una frecuencia baja para ver el efecto.
-# ==============================================================================
-# Definimos una frecuencia w0 = pi/8 
-w0 = np.pi/8 
-xa = np.cos(w0 * n)
-
-# Simulamos la convolución. 'full' devuelve la convolución completa (N + M - 1 muestras)
-ya = signal.convolve(xa, h, mode='full')
-na_full = np.arange(len(ya)) # Nuevo eje temporal para la salida
-
-# Gráfico A
-plt.figure(figsize=(10, 8))
-
-plt.subplot(3, 1, 1)
-plt.stem(n[:20], xa[:20], linefmt='g', markerfmt='go', basefmt='k')
-plt.title(r'a) Entrada $x[n] = \cos(\omega_0 n)$, $\omega_0 = \pi/8$')
-plt.ylabel('Amplitud')
-plt.grid(True)
-
-plt.subplot(3, 1, 2)
-# Graficamos la salida en el rango completo (hasta n=20+4=24)
-plt.stem(na_full[:25], ya[:25], linefmt='b', markerfmt='bo', basefmt='k')
-plt.title(r'Salida $y[n] = x[n] * h[n]$')
-plt.ylabel('Amplitud')
-plt.grid(True)
-
-plt.tight_layout()
-plt.show()
-
-# ==============================================================================
-# b) x[n] = (1/2)^n * u[n]
-# ==============================================================================
-# u[n] esimplifica asumiendo que empezamos en n=0.
-xb = (0.5)**n
-
-# Simulamos la convolución
-yb = signal.convolve(xb, h, mode='full')
-nb_full = np.arange(len(yb))
-
-# Gráfico B
-plt.figure(figsize=(10, 8))
-
-plt.subplot(3, 1, 1)
-plt.stem(n[:15], xb[:15], linefmt='g', markerfmt='go', basefmt='k')
-plt.title(r'b) Entrada $x[n] = (1/2)^n u[n]$')
-plt.ylabel('Amplitud')
-plt.grid(True)
-
-plt.subplot(3, 1, 2)
-plt.stem(nb_full[:20], yb[:20], linefmt='b', markerfmt='bo', basefmt='k')
-plt.title(r'Salida $y[n] = x[n] * h[n]$')
-plt.ylabel('Amplitud')
-plt.grid(True)
-
-plt.tight_layout()
-plt.show()
-
-# ==============================================================================
-# c) x[n] = u[n+1] - u[n-2]
-# ==============================================================================
-# Esta señal es un pulso que vale 1 para n={-1, 0, 1} y cero para el resto.
-# Para simularlo en Python (que empieza en n=0), desplazamos todo 1 muestra:
-# Usaremos un pulso u[n] - u[n-3], que vale 1 para n={0, 1, 2}
-xc = np.where((n >= 0) & (n <= 2), 1, 0)
-
-# Simulamos la convolución
-yc = signal.convolve(xc, h, mode='full')
-nc_full = np.arange(len(yc))
-
-# Gráfico C
-plt.figure(figsize=(10, 8))
-
-plt.subplot(3, 1, 1)
-plt.stem(n[:10], xc[:10], linefmt='g', markerfmt='go', basefmt='k')
-plt.title(r'c) Entrada $x[n] = u[n] - u[n-3]$ (pulso corto)')
-plt.ylabel('Amplitud')
-plt.grid(True)
-
-plt.subplot(3, 1, 2)
-plt.stem(nc_full[:15], yc[:15], linefmt='b', markerfmt='bo', basefmt='k')
-plt.title(r'Salida $y[n] = x[n] * h[n]$')
-plt.ylabel('Amplitud')
-plt.grid(True)
-
-plt.tight_layout()
-plt.show()
