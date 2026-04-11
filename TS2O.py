@@ -19,11 +19,11 @@ ff = 1
 tt, s = mi_funcion_sen(vmax, dc, ff, ph=0, nn=nn, fs=fs)
 
 # %% Parámetros del ADC para calcular la potencia de cuantización
-B = 4             # bits
+B = 8             # bits
 Vf = 2             # Voltios, rango analógico ±VF
 q = (2*Vf)/(2**B)  # paso de cuantización
 Pq = q**2 / 12     # potencia de cuantización
-kn = 1        # factor de escala del ruido
+kn = 10       # factor de escala del ruido
 Pn = kn * Pq       # potencia del ruido
 
 # %% Ruido aditivo Gaussiano
@@ -164,7 +164,7 @@ plt.legend(loc='upper right', fontsize='small', ncol=2)
 plt.show()
 #%%
 # ---  Graficación: Análisis Estadístico  ---
-ee = sr_quant - srq
+ee = sr_quant - sr
 
 plt.figure(figsize=(10, 6))
 
