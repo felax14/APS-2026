@@ -23,7 +23,7 @@ f3 = (nn/4 + 0.5) * df   # 125.5 Hz (Máxima fuga)
 
 # %% Generación de señal y Padding
 # Cambia f1 por f2 o f3 para ver cómo cambian los puntos rojos en el gráfico
-tt, s = mi_funcion_sen(vmax, dc, f1, ph, nn, fs)
+tt, s = mi_funcion_sen(vmax, dc, f3, ph, nn, fs)
 
 # Padding drástico para suavizar la curva (como en el libro)
 cant_padds = 9
